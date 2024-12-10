@@ -1,4 +1,3 @@
-
 database_vars = {
   "DB_NAME"     = "mydb"
   "DB_USER"     = "dbuser"
