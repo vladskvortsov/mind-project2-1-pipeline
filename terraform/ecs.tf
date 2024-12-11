@@ -1,5 +1,6 @@
 data "aws_caller_identity" "current" {}
 
+data "aws_availability_zones" "available" {}
 
 
 
@@ -143,11 +144,36 @@ data "aws_caller_identity" "current" {}
 # }
 
 
+
+
+
+
+locals {
+  # region = "eu-west-1"
+  name   = "ex-${basename(path.cwd)}"
+
+  vpc_cidr = "10.0.0.0/16"
+  azs      = slice(data.aws_availability_zones.available.names, 0, 3)
+
+  container_name = "ecsdemo-frontend"
+  container_port = 3000
+
+  tags = {
+    Name       = local.name
+    Example    = local.name
+    Repository = "https://github.com/terraform-aws-modules/terraform-aws-ecs"
+  }
+}
+
+
+
+
+
 ################################################################################
 # Cluster
 ################################################################################
 
-module "ecs" {
+module "ecs_cluster" {
   source = "terraform-aws-modules/ecs/aws"
 
   cluster_name = project2-1-cluster
@@ -160,119 +186,216 @@ module "ecs" {
         base   = 20
       }
     }
-    # FARGATE_SPOT = {
-    #   default_capacity_provider_strategy = {
-    #     weight = 50
-    #   }
-    # }
   }
 
-  services = {
+  # tags = local.tags
+}
+
+# ################################################################################
+# # Service
+# ################################################################################
+
+# module "ecs_service" {
+#   source = "../../modules/service"
+
+#   name        = frontend
+#   cluster_arn = module.ecs_cluster.arn
+
+#   cpu    = 1024
+#   memory = 1024
+
+#   # Enables ECS Exec
+#   enable_execute_command = true
+
+#   # Container definition(s)
+#   container_definitions = {
+
+#     fluent-bit = {
+#       cpu       = 512
+#       memory    = 1024
+#       essential = true
+#       image     = nonsensitive(data.aws_ssm_parameter.fluentbit.value)
+#       firelens_configuration = {
+#         type = "fluentbit"
+#       }
+#       memory_reservation = 50
+#       user               = "0"
+#     }
+
+#     (local.container_name) = {
+#       cpu       = 512
+#       memory    = 1024
+#       essential = true
+#       image     = "public.ecr.aws/aws-containers/ecsdemo-frontend:776fd50"
+#       port_mappings = [
+#         {
+#           name          = local.container_name
+#           containerPort = local.container_port
+#           hostPort      = local.container_port
+#           protocol      = "tcp"
+#         }
+#       ]
+
+#       # Example image used requires access to write to root filesystem
+#       readonly_root_filesystem = false
+
+#       dependencies = [{
+#         containerName = "fluent-bit"
+#         condition     = "START"
+#       }]
+
+#       enable_cloudwatch_logging = false
+#       log_configuration = {
+#         logDriver = "awsfirelens"
+#         options = {
+#           Name                    = "firehose"
+#           region                  = local.region
+#           delivery_stream         = "my-stream"
+#           log-driver-buffer-limit = "2097152"
+#         }
+#       }
+
+#       linux_parameters = {
+#         capabilities = {
+#           add = []
+#           drop = [
+#             "NET_RAW"
+#           ]
+#         }
+#       }
+
+#       # Not required for fluent-bit, just an example
+#       volumes_from = [{
+#         sourceContainer = "fluent-bit"
+#         readOnly        = false
+#       }]
+
+#       memory_reservation = 100
+#     }
+#   }
+
+#   service_connect_configuration = {
+#     namespace = aws_service_discovery_http_namespace.this.arn
+#     service = {
+#       client_alias = {
+#         port     = local.container_port
+#         dns_name = local.container_name
+#       }
+#       port_name      = local.container_name
+#       discovery_name = local.container_name
+#     }
+#   }
+
+#   load_balancer = {
+#     service = {
+#       target_group_arn = module.alb.target_groups["ex_ecs"].arn
+#       container_name   = local.container_name
+#       container_port   = local.container_port
+#     }
+#   }
+
+#   subnet_ids = module.vpc.private_subnets
+#   security_group_rules = {
+#     alb_ingress_3000 = {
+#       type                     = "ingress"
+#       from_port                = local.container_port
+#       to_port                  = local.container_port
+#       protocol                 = "tcp"
+#       description              = "Service port"
+#       source_security_group_id = module.alb.security_group_id
+#     }
+#     egress_all = {
+#       type        = "egress"
+#       from_port   = 0
+#       to_port     = 0
+#       protocol    = "-1"
+#       cidr_blocks = ["0.0.0.0/0"]
+#     }
+#   }
+
+#   service_tags = {
+#     "ServiceTag" = "Tag on service level"
+#   }
+
+#   tags = local.tags
+# }
+
+################################################################################
+# Standalone Task Definition (w/o Service)
+################################################################################
+
+module "ecs_task_definition" {
+  source = "terraform-aws-modules/ecs/service"
+
+  # Service
+  name        = "frontend"
+  cluster_arn = module.ecs_cluster.arn
+
+  # Task Definition
+  volume = {
+    ex-vol = {}
+  }
+
+  runtime_platform = {
+    cpu_architecture        = "ARM64"
+    operating_system_family = "LINUX"
+  }
+
+  # Container definition(s)
+  container_definitions = {
     frontend = {
-      cpu    = 1024
-      memory = 4096
+      image = "nginxdemos/hello"  #"${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1:frontend"
 
-      # Container definition(s)
-      container_definitions = {
-
-        frontend = {
-          cpu       = 512
-          memory    = 1024
-          essential = true
-          image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1:frontend"
-
-          health_check = {
-            command = ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
-          }
-
-          port_mappings = [
-            {
-              name          = frontend
-              containerPort = 80
-              hostPort      = 80
-              protocol      = "tcp"
-            }
-          ]
-
-          # Example image used requires access to write to root filesystem
-          readonly_root_filesystem = false
-
-          # dependencies = [{
-          #   containerName = "fluent-bit"
-          #   condition     = "START"
-          # }]
-
-          enable_cloudwatch_logging = false
-
-          memory_reservation = 100
-        }
-      }
-
-      service_connect_configuration = {
-        namespace = project2-1
-        service = {
-          client_alias = {
-            port     = 80
-            dns_name = frontend
-          }
-          port_name      = 80
-          discovery_name = frontend
-        }
-      }
-
-      load_balancer = {
-        service = {
-          target_group_arn = module.alb.target_groups["ex_ecs"].arn
-          container_name   = frontend
-          container_port   = 80
-        }
-      }
-
-      tasks_iam_role_name        = "ecs-tasks"
-      tasks_iam_role_policies = {
-        ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess"
-      }
-      tasks_iam_role_statements = [
+      mount_points = [
         {
-          actions   = ["s3:List*"]
-          resources = ["arn:aws:s3:::*"]
+          sourceVolume  = "ex-vol",
+          containerPath = "/app"
         }
       ]
 
-      subnet_ids = module.vpc.private_subnets
-      security_group_rules = {
-        alb_ingress_3000 = {
-          type                     = "ingress"
-          from_port                = 80
-          to_port                  = 80
-          protocol                 = "tcp"
-          description              = "Service port"
-          source_security_group_id = module.alb.security_group_id
-        }
-        egress_all = {
-          type        = "egress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      }
+      # command    = ["echo hello world"]
+      entrypoint = ["python", "manage.py", "runserver", "0.0.0.0:80"]
     }
   }
 
-  tags = prod
+  subnet_ids = module.vpc.private_subnets
+
+  security_group_rules = {
+  
+
+    all_http = {
+      type = "ingress"
+      from_port   = 80
+      to_port     = 80
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+
+    egress_all = {
+      type        = "egress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
+  # tags = local.tags
 }
 
 
 
 
 
-################################################################################
-# Supporting Resources
-################################################################################
 
 
 
+
+# resource "aws_service_discovery_http_namespace" "this" {
+#   name        = local.name
+#   description = "CloudMap namespace for ${local.name}"
+#   tags        = local.tags
+# }
 
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
@@ -316,12 +439,12 @@ module "alb" {
   }
 
   target_groups = {
-    ex_ecs = {
+    project2-1 = {
       backend_protocol                  = "HTTP"
       backend_port                      = 80
       target_type                       = "ip"
       deregistration_delay              = 5
-      load_balancing_cross_zone_enabled = false
+      load_balancing_cross_zone_enabled = true
 
       health_check = {
         enabled             = true
@@ -335,11 +458,11 @@ module "alb" {
         unhealthy_threshold = 2
       }
 
-      # Theres nothing to attach here in this definition. Instead,
+      # There's nothing to attach here in this definition. Instead,
       # ECS will attach the IPs of the tasks to this target group
       create_attachment = false
     }
   }
 
-  tags = prod
+  # tags = local.tags
 }
