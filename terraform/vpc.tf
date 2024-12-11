@@ -16,32 +16,32 @@ module "vpc" {
   }
 }
 
-# module "ec2_sg" {
-#   source = "terraform-aws-modules/security-group/aws"
+module "ecs_sg" {
+  source = "terraform-aws-modules/security-group/aws"
 
-#   name   = "ec2-sg"
-#   vpc_id = module.vpc.vpc_id
+  name   = "ecs-sg"
+  vpc_id = module.vpc.vpc_id
 
-#   ingress_cidr_blocks = ["0.0.0.0/0"]
-#   ingress_rules       = ["http-80-tcp", "ssh-tcp"]
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+  ingress_rules       = ["http-80-tcp", "ssh-tcp"]
 
-#   ingress_with_cidr_blocks = [
-#     {
-#       from_port   = 8000
-#       to_port     = 8000
-#       protocol    = "tcp"
-#       cidr_blocks = "0.0.0.0/0"
-#     },
-#     {
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 8000
+      to_port     = 8000
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
 
-#       from_port   = 8003
-#       to_port     = 8003
-#       protocol    = "tcp"
-#       cidr_blocks = "0.0.0.0/0"
-#     }
-#   ]
+      from_port   = 8003
+      to_port     = 8003
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
 
-#   egress_rules = ["all-all"]
-# }
+  egress_rules = ["all-all"]
+}
 
 
