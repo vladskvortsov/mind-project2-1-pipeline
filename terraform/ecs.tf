@@ -34,6 +34,7 @@ module "ecs" {
     # }
   }
 
+
   services = {
     frontend = {
       cpu    = 1024
@@ -99,6 +100,8 @@ module "ecs" {
       }
 
       subnet_ids = module.vpc.private_subnets
+
+      vpc_security_group_ids = module.vpc.vpc_security_group_ids
       security_group_rules = {
         alb_ingress_80 = {
           type                     = "ingress"
