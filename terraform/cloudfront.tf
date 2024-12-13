@@ -1,48 +1,57 @@
-# data "aws_caller_identity" "current" {}
-
-# module "cloudfront" {
-#   # depends_on = [module.s3_bucket]
-#   source = "terraform-aws-modules/cloudfront/aws"
+module "cloudfront" {
+  depends_on = [module.alb]
+  source = "terraform-aws-modules/cloudfront/aws"
 
 
-#   enabled             = true
-#   price_class         = "PriceClass_All"
-#   retain_on_delete    = false
-#   wait_for_deployment = false
+  enabled             = true
+  price_class         = "PriceClass_All"
+  retain_on_delete    = false
+  wait_for_deployment = false
 #   default_root_object = "index.html"
 
 #   create_origin_access_control = true
 
 #   origin_access_control = {
-#     "s3_oac" : {
+#     "alb_oac" : {
 #       "description" : "",
-#       "origin_type" : "s3",
+#       "origin_type" : "mediastore",
 #       "signing_behavior" : "always",
 #       "signing_protocol" : "sigv4"
 #     }
 #   }
 
-#   origin = {
+  origin = {
+
+    "${module.alb.dns_name}" = {
+    domain_name      = "${module.alb.dns_name}"
+    origin_type = "mediastore"
+      custom_origin_config = {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "match-viewer"
+        origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+      }
+    }
+    # alb_oac = { # with origin access control settings (recommended)
+    #   domain_name           = "${module.alb.dns_name}"
+    #   origin_access_control = "alb_oac" # key in `origin_access_control`
+    #     }
 
 
-#     "${var.frontend_bucket_name}.s3.amazonaws.com" = {
-#       domain_name           = "${var.frontend_bucket_name}.s3.amazonaws.com"
-#       origin_access_control = "s3_oac"
+  }
 
-#     }
-#   }
 
-#   default_cache_behavior = {
-#     path_pattern = "/*"
+  default_cache_behavior = {
+    # path_pattern = "/*"
 
-#     target_origin_id       = "${var.frontend_bucket_name}.s3.amazonaws.com"
-#     viewer_protocol_policy = "allow-all"
+    target_origin_id       = "${module.alb.dns_name}"
+    viewer_protocol_policy = "allow-all"
 
-#     allowed_methods = ["GET", "HEAD", "OPTIONS"]
-#     cached_methods  = ["GET", "HEAD"]
-#     compress        = true
-#     query_string    = true
-#   }
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD", "OPTIONS"]
+    compress               = true
+    query_string           = true
+  }
 
-# }
+}
 
