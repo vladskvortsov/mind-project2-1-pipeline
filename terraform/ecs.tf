@@ -1,12 +1,12 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_service_discovery_http_namespace" "project2-1" {
-  name        = "project2-1"
+  name = "project2-1"
 }
 
 module "ecs" {
-  depends_on = [ resource.aws_service_discovery_http_namespace.project2-1, module.rds, module.elasticache ]
-  source = "terraform-aws-modules/ecs/aws"
+  depends_on = [resource.aws_service_discovery_http_namespace.project2-1, module.rds, module.elasticache]
+  source     = "terraform-aws-modules/ecs/aws"
 
   cluster_name = "project2-1-cluster"
 
@@ -57,9 +57,9 @@ module "ecs" {
             }
           ]
 
-          readonly_root_filesystem = false
+          readonly_root_filesystem  = false
           enable_cloudwatch_logging = true
-          memory_reservation = 100
+          memory_reservation        = 100
 
           environment = var.database_vars2
 
@@ -86,39 +86,41 @@ module "ecs" {
         }
       }
 
-      tasks_iam_role_name        = "ecr-pull-role"
+      tasks_iam_role_name = "ecr-pull-role"
       tasks_iam_role_policies = {
-        ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess" 
+        ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess"
       }
       tasks_iam_role_statements = [
         {
-          actions   = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer",
+          actions = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchGetImage",
+            "ecr:GetDownloadUrlForLayer",
           "ecr:BatchImportUpstreamImage"]
           resources = ["*"]
         }
       ]
 
       subnet_ids = [module.vpc.private_subnets[0]]
+      create_security_group = false
+      security_group_ids = [module.frontend_sg.security_group_id]
 
-      security_group_rules = {
-        alb_ingress_80 = {
-          type                     = "ingress"
-          from_port                = 80
-          to_port                  = 80
-          protocol                 = "tcp"
-          source_security_group_id = module.alb.security_group_id
-        }
-        egress_all = {
-          type        = "egress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      }
+      # security_group_rules = {
+      #   alb_ingress_80 = {
+      #     type                     = "ingress"
+      #     from_port                = 80
+      #     to_port                  = 80
+      #     protocol                 = "tcp"
+      #     source_security_group_id = module.alb.security_group_id
+      #   }
+      #   egress_all = {
+      #     type        = "egress"
+      #     from_port   = 0
+      #     to_port     = 0
+      #     protocol    = "-1"
+      #     cidr_blocks = ["0.0.0.0/0"]
+      #   }
+      # }
     }
 
     backend-rds = {
@@ -133,7 +135,7 @@ module "ecs" {
           essential = true
           image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1:backend-rds"
           health_check = {
-            command = ["CMD-SHELL", "curl -f http://localhost:8001/test_connection/ || exit 1"]
+            command = ["CMD-SHELL", "curl http://localhost:8001/test_connection/ || exit 1"]
           }
 
           port_mappings = [
@@ -142,18 +144,18 @@ module "ecs" {
               containerPort = 8001
               hostPort      = 8001
               protocol      = "tcp"
-            },
-            {
-              name          = "postgres"
-              containerPort = 5432
-              hostPort      = 5432
-              protocol      = "tcp"
             }
+            # {
+            #   name          = "postgres"
+            #   containerPort = 5432
+            #   hostPort      = 5432
+            #   protocol      = "tcp"
+            # }
           ]
 
-          readonly_root_filesystem = false
+          readonly_root_filesystem  = false
           enable_cloudwatch_logging = true
-          memory_reservation = 100
+          memory_reservation        = 100
 
           environment = var.database_vars2
         }
@@ -179,48 +181,48 @@ module "ecs" {
         }
       }
 
-      tasks_iam_role_name        = "ecr-pull-role"
+      tasks_iam_role_name = "ecr-pull-role"
       tasks_iam_role_policies = {
-        ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess" 
+        ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess"
       }
       tasks_iam_role_statements = [
         {
-          actions   = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer",
+          actions = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchGetImage",
+            "ecr:GetDownloadUrlForLayer",
           "ecr:BatchImportUpstreamImage"]
           resources = ["*"]
         }
       ]
 
       subnet_ids = [module.vpc.private_subnets[0]]
+      create_security_group = false
+      security_group_ids = [module.backend_rds_sg.security_group_id]
+      # security_group_rules = {
+      #   alb_ingress = {
+      #     type                     = "ingress"
+      #     from_port                = 8001
+      #     to_port                  = 8001
+      #     protocol                 = "tcp"
+      #     source_security_group_id = module.alb.security_group_id
+      #   }
 
-      # vpc_security_group_ids = [module.ecs_sg.id, module.rds_sg.id, module.elasticache.security_group_id]
-      security_group_rules = {
-        alb_ingress = {
-          type                     = "ingress"
-          from_port                = 8001
-          to_port                  = 8001
-          protocol                 = "tcp"
-          source_security_group_id = module.alb.security_group_id
-        }
-
-        postgres = {
-          type                     = "ingress"
-          from_port                = 5432
-          to_port                  = 5432
-          protocol                 = "tcp"
-          source_security_group_id = module.rds_sg.security_group_id
-        }
-        egress_all = {
-          type        = "egress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      }
+      #   # postgres = {
+      #   #   type                     = "ingress"
+      #   #   from_port                = 5432
+      #   #   to_port                  = 5432
+        
+      #   #   source_security_group_id = module.rds_sg.security_group_id
+      #   # }
+      #   egress_all = {
+      #     type        = "egress"
+      #     from_port   = 0
+      #     to_port     = 0
+      #     protocol    = "-1"
+      #     cidr_blocks = ["0.0.0.0/0"]
+      #   }
+      # }
     }
 
     backend-redis = {
@@ -235,7 +237,7 @@ module "ecs" {
           essential = true
           image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1:backend-redis"
           health_check = {
-            command = ["CMD-SHELL", "curl -f http://localhost:8002/test_connection/ || exit 1"]
+            command = ["CMD-SHELL", "curl http://localhost:8002/test_connection/ || exit 1"]
           }
           port_mappings = [
             {
@@ -243,18 +245,12 @@ module "ecs" {
               containerPort = 8002
               hostPort      = 8002
               protocol      = "tcp"
-            },
-            {
-              name          = "redis"
-              containerPort = 6379
-              hostPort      = 6379
-              protocol      = "tcp"
             }
           ]
 
-          readonly_root_filesystem = false
+          readonly_root_filesystem  = false
           enable_cloudwatch_logging = true
-          memory_reservation = 100
+          memory_reservation        = 100
 
           environment = var.database_vars2
           # {
@@ -265,7 +261,7 @@ module "ecs" {
           #   name = "REDIS_HOST"
           #   value = var.AWS_REGION
           # }
-          
+
         }
       }
 
@@ -289,50 +285,59 @@ module "ecs" {
         }
       }
 
-      tasks_iam_role_name        = "ecr-pull-role"
+      tasks_iam_role_name = "ecr-pull-role"
       tasks_iam_role_policies = {
-        ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess" 
+        ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess"
       }
       tasks_iam_role_statements = [
         {
-          actions   = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer",
+          actions = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchGetImage",
+            "ecr:GetDownloadUrlForLayer",
           "ecr:BatchImportUpstreamImage"]
           resources = ["*"]
         }
       ]
 
       subnet_ids = [module.vpc.private_subnets[0]]
+      create_security_group = false
+      security_group_ids = [module.backend_redis_sg.security_group_id]
 
-      security_group_rules = {
-        alb_ingress = {
-          type                     = "ingress"
-          from_port                = 8002
-          to_port                  = 8002
-          protocol                 = "tcp"
-          source_security_group_id = module.alb.security_group_id
-        }
+      # security_group_rules = {
+      #   alb_ingress = {
+      #     type                     = "ingress"
+      #     from_port                = 8002
+      #     to_port                  = 8002
+      #     protocol                 = "tcp"
+      #     source_security_group_id = module.alb.security_group_id
+      #   }
 
-        redis = {
-          type                     = "ingress"
-          from_port                = 6379
-          to_port                  = 6379
-          protocol                 = "tcp"
-          source_security_group_id = module.elasticache.security_group_id
-        }
-        egress_all = {
-          type        = "egress"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      }
+      #   ecs_ingress = {
+      #     type                     = "ingress"
+      #     from_port                = 8002
+      #     to_port                  = 8002
+      #     protocol                 = "tcp"
+      #     cidr_blocks = ["0.0.0.0/0"]
+      #   }
+
+      #   # redis = {
+      #   #   type                     = "ingress"
+      #   #   from_port                = 6379
+      #   #   to_port                  = 6379
+      #   #   protocol                 = "tcp"
+      #   #   source_security_group_id = module.elasticache.security_group_id
+      #   # }
+      #   egress_all = {
+      #     type        = "egress"
+      #     from_port   = 0
+      #     to_port     = 0
+      #     protocol    = "-1"
+      #     cidr_blocks = ["0.0.0.0/0"]
+      #   }
+      # }
     }
 
-    
   }
 
   tags = {
@@ -343,7 +348,7 @@ module "ecs" {
 
 
 module "alb" {
-  source  = "terraform-aws-modules/alb/aws"
+  source = "terraform-aws-modules/alb/aws"
 
   name = "project2-1-alb"
 
@@ -377,22 +382,6 @@ module "alb" {
       ip_protocol = "tcp"
       cidr_ipv4   = "0.0.0.0/0"
     }
-
-    # postgres = {
-    #   from_port   = 5432
-    #   to_port     = 5432
-    #   ip_protocol = "tcp"
-    #   cidr_ipv4   = "0.0.0.0/0"
-    # }
-
-    # redis = {
-    #   from_port   = 6379
-    #   to_port     = 6379
-    #   ip_protocol = "tcp"
-    #   cidr_ipv4   = "0.0.0.0/0"
-    # }
-
-
   }
   security_group_egress_rules = {
     all = {

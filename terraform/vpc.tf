@@ -29,9 +29,90 @@ module "rds_sg" {
       from_port   = 5432
       to_port     = 5432
       protocol    = "tcp"
-      cidr_blocks = "0.0.0.0/0"
+      source_security_groups_ids = module.backend_rds_sg.security_group_id
     }
   ]
 
   egress_rules = ["all-all"]
 }
+
+module "elasticache_sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
+  name   = "elasticache-sg"
+  vpc_id = module.vpc.vpc_id
+
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 5432
+      to_port     = 5432
+      protocol    = "tcp"
+      source_security_groups_ids = module.backend_redis_sg.security_group_id
+    }
+  ]
+
+  egress_rules = ["all-all"]
+}
+
+module "frontend_sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
+  name   = "frontend-sg"
+  vpc_id = module.vpc.vpc_id
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      source_security_groups_ids = module.alb.security_group_id
+
+    }
+  ]
+
+  egress_rules = ["all-all"]
+}
+
+module "backend_rds_sg" {
+  depends_on = [module.frontend_sg]
+  source = "terraform-aws-modules/security-group/aws"
+
+  name   = "backend-rds-sg"
+  vpc_id = module.vpc.vpc_id
+
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 8001
+      to_port     = 8001
+      protocol    = "tcp"
+      source_security_groups_ids = module.frontend_sg.security_group_id
+    }
+  ]
+
+  egress_rules = ["all-all"]
+}
+
+module "backend_redis_sg" {
+  depends_on = [module.frontend_sg]
+  source = "terraform-aws-modules/security-group/aws"
+
+  name   = "backend-redis-sg"
+  vpc_id = module.vpc.vpc_id
+
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 8002
+      to_port     = 8002
+      protocol    = "tcp"
+      source_security_groups_ids = module.frontend_sg.security_group_id
+    }
+  ]
+  egress_rules = ["all-all"]
+}
+

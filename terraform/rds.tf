@@ -20,11 +20,11 @@ module "rds" {
 
   vpc_security_group_ids = [module.rds_sg.security_group_id]
 
-  multi_az               = false
+  multi_az = false
 
   # maintenance_window = "Mon:00:00-Mon:03:00"
   # backup_window      = "03:00-06:00"
-  deletion_protection = false
+  deletion_protection     = false
   backup_retention_period = 0
   skip_final_snapshot     = true
 
@@ -34,9 +34,9 @@ module "rds" {
 
   create_db_option_group    = false
   create_db_parameter_group = false
-  
+
   tags = {
-    Project       = "project2-1"
+    Project     = "project2-1"
     Environment = "prod"
   }
 }
