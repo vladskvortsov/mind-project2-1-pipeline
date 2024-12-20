@@ -25,11 +25,6 @@ module "ecs" {
         weight = 50
       }
     }
-    # FARGATE_SPOT = {
-    #   default_capacity_provider_strategy = {
-    #     weight = 50
-    #   }
-    # }
   }
 
   services = {
@@ -104,23 +99,6 @@ module "ecs" {
       subnet_ids = [module.vpc.private_subnets[0]]
       create_security_group = false
       security_group_ids = [module.frontend_sg.security_group_id]
-
-      # security_group_rules = {
-      #   alb_ingress_80 = {
-      #     type                     = "ingress"
-      #     from_port                = 80
-      #     to_port                  = 80
-      #     protocol                 = "tcp"
-      #     source_security_group_id = module.alb.security_group_id
-      #   }
-      #   egress_all = {
-      #     type        = "egress"
-      #     from_port   = 0
-      #     to_port     = 0
-      #     protocol    = "-1"
-      #     cidr_blocks = ["0.0.0.0/0"]
-      #   }
-      # }
     }
 
     backend-rds = {
@@ -145,19 +123,25 @@ module "ecs" {
               hostPort      = 8001
               protocol      = "tcp"
             }
-            # {
-            #   name          = "postgres"
-            #   containerPort = 5432
-            #   hostPort      = 5432
-            #   protocol      = "tcp"
-            # }
           ]
 
           readonly_root_filesystem  = false
           enable_cloudwatch_logging = true
           memory_reservation        = 100
 
-          environment = var.database_vars2
+          environment = [
+
+          { "name" : "DB_HOST", "value": "${module.rds.db_instance_endpoint}"},
+
+          { "name" : "DB_NAME", "value" : "mydb" },
+
+          { "name" : "DB_USER", "value" : "dbuser" },
+
+          { "name" : "DB_PASSWORD", "value" : "mypassword" },
+
+          { "name" : "DB_PORT", "value" : "5432" },
+          ]
+          # var.database_vars2
         }
       }
 
@@ -170,14 +154,6 @@ module "ecs" {
           }
           port_name      = "backend-rds"
           discovery_name = "backend-rds"
-        }
-      }
-
-      load_balancer = {
-        service = {
-          target_group_arn = module.alb.target_groups["backend_rds-tg"].arn
-          container_name   = "backend-rds"
-          container_port   = 8001
         }
       }
 
@@ -199,30 +175,6 @@ module "ecs" {
       subnet_ids = [module.vpc.private_subnets[0]]
       create_security_group = false
       security_group_ids = [module.backend_rds_sg.security_group_id]
-      # security_group_rules = {
-      #   alb_ingress = {
-      #     type                     = "ingress"
-      #     from_port                = 8001
-      #     to_port                  = 8001
-      #     protocol                 = "tcp"
-      #     source_security_group_id = module.alb.security_group_id
-      #   }
-
-      #   # postgres = {
-      #   #   type                     = "ingress"
-      #   #   from_port                = 5432
-      #   #   to_port                  = 5432
-        
-      #   #   source_security_group_id = module.rds_sg.security_group_id
-      #   # }
-      #   egress_all = {
-      #     type        = "egress"
-      #     from_port   = 0
-      #     to_port     = 0
-      #     protocol    = "-1"
-      #     cidr_blocks = ["0.0.0.0/0"]
-      #   }
-      # }
     }
 
     backend-redis = {
@@ -252,16 +204,13 @@ module "ecs" {
           enable_cloudwatch_logging = true
           memory_reservation        = 100
 
-          environment = var.database_vars2
-          # {
-          #   name = "DB_HOST"
-          #   value = var.AWS_REGION
-          # },
-          # {
-          #   name = "REDIS_HOST"
-          #   value = var.AWS_REGION
-          # }
+          environment = [ 
+          # var.database_vars2,
 
+            { "name" : "REDIS_PORT", "value" : "6379" },
+
+            { "name" : "REDIS_HOST", "value": "redis.fljh7y.0001.eun1.cache.amazonaws.com"}
+          ]
         }
       }
 
@@ -274,14 +223,6 @@ module "ecs" {
           }
           port_name      = "backend-redis"
           discovery_name = "backend-redis"
-        }
-      }
-
-      load_balancer = {
-        service = {
-          target_group_arn = module.alb.target_groups["backend_redis-tg"].arn
-          container_name   = "backend-redis"
-          container_port   = 8002
         }
       }
 
@@ -303,39 +244,6 @@ module "ecs" {
       subnet_ids = [module.vpc.private_subnets[0]]
       create_security_group = false
       security_group_ids = [module.backend_redis_sg.security_group_id]
-
-      # security_group_rules = {
-      #   alb_ingress = {
-      #     type                     = "ingress"
-      #     from_port                = 8002
-      #     to_port                  = 8002
-      #     protocol                 = "tcp"
-      #     source_security_group_id = module.alb.security_group_id
-      #   }
-
-      #   ecs_ingress = {
-      #     type                     = "ingress"
-      #     from_port                = 8002
-      #     to_port                  = 8002
-      #     protocol                 = "tcp"
-      #     cidr_blocks = ["0.0.0.0/0"]
-      #   }
-
-      #   # redis = {
-      #   #   type                     = "ingress"
-      #   #   from_port                = 6379
-      #   #   to_port                  = 6379
-      #   #   protocol                 = "tcp"
-      #   #   source_security_group_id = module.elasticache.security_group_id
-      #   # }
-      #   egress_all = {
-      #     type        = "egress"
-      #     from_port   = 0
-      #     to_port     = 0
-      #     protocol    = "-1"
-      #     cidr_blocks = ["0.0.0.0/0"]
-      #   }
-      # }
     }
 
   }
@@ -368,20 +276,6 @@ module "alb" {
       ip_protocol = "tcp"
       cidr_ipv4   = "0.0.0.0/0"
     }
-
-    backend_rds = {
-      from_port   = 8001
-      to_port     = 8001
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-
-    backend_redis = {
-      from_port   = 8002
-      to_port     = 8002
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
   }
   security_group_egress_rules = {
     all = {
@@ -399,25 +293,6 @@ module "alb" {
         target_group_key = "frontend-tg"
       }
     }
-
-    backend_rds = {
-      port     = 8001
-      protocol = "HTTP"
-
-      forward = {
-        target_group_key = "backend_rds-tg"
-      }
-    }
-
-    backend_redis = {
-      port     = 8002
-      protocol = "HTTP"
-
-      forward = {
-        target_group_key = "backend_redis-tg"
-      }
-    }
-
   }
 
   target_groups = {
@@ -434,55 +309,6 @@ module "alb" {
         interval            = 30
         matcher             = "200"
         path                = "/"
-        port                = "traffic-port"
-        protocol            = "HTTP"
-        timeout             = 5
-        unhealthy_threshold = 2
-      }
-
-      # There's nothing to attach here in this definition. Instead,
-      # ECS will attach the IPs of the tasks to this target group
-      create_attachment = false
-    }
-
-
-    backend_rds-tg = {
-      backend_protocol                  = "HTTP"
-      backend_port                      = 8001
-      target_type                       = "ip"
-      deregistration_delay              = 5
-      load_balancing_cross_zone_enabled = true
-
-      health_check = {
-        enabled             = true
-        healthy_threshold   = 5
-        interval            = 30
-        matcher             = "200"
-        path                = "/test_connection/"
-        port                = "traffic-port"
-        protocol            = "HTTP"
-        timeout             = 5
-        unhealthy_threshold = 2
-      }
-
-      # There's nothing to attach here in this definition. Instead,
-      # ECS will attach the IPs of the tasks to this target group
-      create_attachment = false
-    }
-
-    backend_redis-tg = {
-      backend_protocol                  = "HTTP"
-      backend_port                      = 8002
-      target_type                       = "ip"
-      deregistration_delay              = 5
-      load_balancing_cross_zone_enabled = true
-
-      health_check = {
-        enabled             = true
-        healthy_threshold   = 5
-        interval            = 30
-        matcher             = "200"
-        path                = "/test_connection/"
         port                = "traffic-port"
         protocol            = "HTTP"
         timeout             = 5

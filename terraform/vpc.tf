@@ -22,15 +22,15 @@ module "rds_sg" {
   name   = "rds-sg"
   vpc_id = module.vpc.vpc_id
 
-  ingress_cidr_blocks = ["0.0.0.0/0"]
+  # ingress_cidr_blocks = ["0.0.0.0/0"]
 
-  ingress_with_cidr_blocks = [
+  ingress_with_source_security_group_id = [
     {
       from_port   = 5432
       to_port     = 5432
       protocol    = "tcp"
-      source_security_groups_ids = module.backend_rds_sg.security_group_id
-    }
+      source_security_group_id = module.backend_rds_sg.security_group_id
+    },
   ]
 
   egress_rules = ["all-all"]
@@ -42,15 +42,15 @@ module "elasticache_sg" {
   name   = "elasticache-sg"
   vpc_id = module.vpc.vpc_id
 
-  ingress_cidr_blocks = ["0.0.0.0/0"]
+  # ingress_cidr_blocks = ["0.0.0.0/0"]
 
-  ingress_with_cidr_blocks = [
+  ingress_with_source_security_group_id = [
     {
-      from_port   = 5432
-      to_port     = 5432
+      from_port   = 6379
+      to_port     = 6379
       protocol    = "tcp"
-      source_security_groups_ids = module.backend_redis_sg.security_group_id
-    }
+      source_security_group_id = module.backend_redis_sg.security_group_id
+    },
   ]
 
   egress_rules = ["all-all"]
@@ -62,14 +62,14 @@ module "frontend_sg" {
   name   = "frontend-sg"
   vpc_id = module.vpc.vpc_id
 
-  ingress_with_cidr_blocks = [
+  ingress_with_source_security_group_id = [
+
     {
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
-      source_security_groups_ids = module.alb.security_group_id
-
-    }
+      source_security_group_id = module.alb.security_group_id
+    },
   ]
 
   egress_rules = ["all-all"]
@@ -82,15 +82,15 @@ module "backend_rds_sg" {
   name   = "backend-rds-sg"
   vpc_id = module.vpc.vpc_id
 
-  ingress_cidr_blocks = ["0.0.0.0/0"]
+  # ingress_cidr_blocks = ["0.0.0.0/0"]
 
-  ingress_with_cidr_blocks = [
+  ingress_with_source_security_group_id = [
     {
       from_port   = 8001
       to_port     = 8001
       protocol    = "tcp"
-      source_security_groups_ids = module.frontend_sg.security_group_id
-    }
+      source_security_group_id = module.frontend_sg.security_group_id
+    },
   ]
 
   egress_rules = ["all-all"]
@@ -103,15 +103,15 @@ module "backend_redis_sg" {
   name   = "backend-redis-sg"
   vpc_id = module.vpc.vpc_id
 
-  ingress_cidr_blocks = ["0.0.0.0/0"]
+  # ingress_cidr_blocks = ["0.0.0.0/0"]
 
-  ingress_with_cidr_blocks = [
+  ingress_with_source_security_group_id = [
     {
       from_port   = 8002
       to_port     = 8002
       protocol    = "tcp"
-      source_security_groups_ids = module.frontend_sg.security_group_id
-    }
+      source_security_group_id = module.frontend_sg.security_group_id
+    },
   ]
   egress_rules = ["all-all"]
 }

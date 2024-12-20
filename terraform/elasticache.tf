@@ -17,16 +17,7 @@ module "elasticache" {
   vpc_id = module.vpc.vpc_id
 
   create_security_group = false
-
   security_group_ids = [module.elasticache_sg.security_group_id]
-  # security_group_rules = {
-  #   ingress_vpc = {
-  #     # Default type is `ingress`
-  #     # Default port is based on the default engine port
-  #     description = "VPC traffic"
-  #     cidr_ipv4   = "0.0.0.0/0"
-  #   }
-  # }
 
   # Subnet Group
   subnet_ids = [module.vpc.private_subnets[1], module.vpc.private_subnets[2]]
