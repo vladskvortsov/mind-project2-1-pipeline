@@ -3,7 +3,9 @@ module "elasticache" {
 
   cluster_id               = "redis"
   create_cluster           = true
-  create_replication_group = false
+  create_replication_group = true
+  replication_group_id = "redis7"
+
 
   engine_version = "7.1"
   node_type      = "cache.t4g.micro"

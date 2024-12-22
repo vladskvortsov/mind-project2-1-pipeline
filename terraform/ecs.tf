@@ -4,9 +4,9 @@ resource "aws_service_discovery_http_namespace" "project2-1" {
   name = "project2-1"
 }
 
-module "ecs" {
+module "ecs_cluster" {
   depends_on = [resource.aws_service_discovery_http_namespace.project2-1, module.rds, module.elasticache]
-  source     = "terraform-aws-modules/ecs/aws"
+  source  = "terraform-aws-modules/ecs/aws//modules/cluster"
 
   cluster_name = "project2-1-cluster"
 
@@ -27,10 +27,19 @@ module "ecs" {
     }
   }
 
-  services = {
-    frontend = {
+}
+
+module "ecs_service_frontend" {
+  source  = "terraform-aws-modules/ecs/aws//modules/service"
+
+  name        = "frontend"
+  cluster_arn = module.ecs_cluster.arn
+
       cpu    = 1024
       memory = 2048
+
+
+  enable_execute_command = true
 
       container_definitions = {
 
@@ -38,7 +47,7 @@ module "ecs" {
           cpu       = 512
           memory    = 1024
           essential = true
-          image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1:frontend"
+          image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1-frontend:latest"
           health_check = {
             command = ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
           }
@@ -56,8 +65,11 @@ module "ecs" {
           enable_cloudwatch_logging = true
           memory_reservation        = 100
 
-          environment = var.database_vars2
+          environment = [
+              { "name" : "BACKEND_RDS_URL", "value" : "http://backend-rds:8001/test_connection/" },
 
+              { "name" : "BACKEND_REDIS_URL", "value" : "http://backend-redis:8002/test_connection/" }
+          ] 
         }
       }
 
@@ -99,11 +111,23 @@ module "ecs" {
       subnet_ids = [module.vpc.private_subnets[0]]
       create_security_group = false
       security_group_ids = [module.frontend_sg.security_group_id]
+
+    tags = {
+    Environment = "prod"
+    Project     = "project2-1"
+          }
     }
 
-    backend-rds = {
+module "ecs_service_backend_rds" {
+  source  = "terraform-aws-modules/ecs/aws//modules/service"
+
+  name        = "backend-rds"
+  cluster_arn = module.ecs_cluster.arn
+
       cpu    = 1024
       memory = 2048
+
+  enable_execute_command = true
 
       container_definitions = {
 
@@ -111,7 +135,7 @@ module "ecs" {
           cpu       = 512
           memory    = 1024
           essential = true
-          image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1:backend-rds"
+          image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1-backend-rds:latest"
           health_check = {
             command = ["CMD-SHELL", "curl http://localhost:8001/test_connection/ || exit 1"]
           }
@@ -120,7 +144,6 @@ module "ecs" {
             {
               name          = "backend-rds"
               containerPort = 8001
-              hostPort      = 8001
               protocol      = "tcp"
             }
           ]
@@ -131,17 +154,16 @@ module "ecs" {
 
           environment = [
 
-          { "name" : "DB_HOST", "value": "${module.rds.db_instance_endpoint}"},
+          { "name" : "DB_HOST", "value": "${module.rds.db_instance_address}"},
 
-          { "name" : "DB_NAME", "value" : "mydb" },
+          { "name" : "DB_NAME", "value" : "${var.database_vars.DB_NAME}" },
 
-          { "name" : "DB_USER", "value" : "dbuser" },
+          { "name" : "DB_USER", "value" : "${var.database_vars.DB_USER}" },
 
-          { "name" : "DB_PASSWORD", "value" : "mypassword" },
+          { "name" : "DB_PASSWORD", "value" : "${var.database_vars.DB_PASSWORD}" },
 
-          { "name" : "DB_PORT", "value" : "5432" },
+          { "name" : "DB_PORT", "value" : "${var.database_vars.DB_PORT}" },
           ]
-          # var.database_vars2
         }
       }
 
@@ -175,11 +197,23 @@ module "ecs" {
       subnet_ids = [module.vpc.private_subnets[0]]
       create_security_group = false
       security_group_ids = [module.backend_rds_sg.security_group_id]
+
+    tags = {
+    Environment = "prod"
+    Project     = "project2-1"
+          }
     }
 
-    backend-redis = {
+module "ecs_service_backend_redis" {
+  source  = "terraform-aws-modules/ecs/aws//modules/service"
+
+  name        = "backend-redis"
+  cluster_arn = module.ecs_cluster.arn
+
       cpu    = 1024
       memory = 2048
+
+  enable_execute_command = true
 
       container_definitions = {
 
@@ -187,7 +221,7 @@ module "ecs" {
           cpu       = 512
           memory    = 1024
           essential = true
-          image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1:backend-redis"
+          image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.AWS_REGION}.amazonaws.com/project2-1-backend-redis:latest"
           health_check = {
             command = ["CMD-SHELL", "curl http://localhost:8002/test_connection/ || exit 1"]
           }
@@ -195,7 +229,6 @@ module "ecs" {
             {
               name          = "backend-redis"
               containerPort = 8002
-              hostPort      = 8002
               protocol      = "tcp"
             }
           ]
@@ -205,11 +238,10 @@ module "ecs" {
           memory_reservation        = 100
 
           environment = [ 
-          # var.database_vars2,
 
-            { "name" : "REDIS_PORT", "value" : "6379" },
+            { "name" : "REDIS_PORT", "value" : "${var.database_vars.REDIS_PORT}" },
 
-            { "name" : "REDIS_HOST", "value": "redis.fljh7y.0001.eun1.cache.amazonaws.com"}
+            { "name" : "REDIS_HOST", "value": "${module.elasticache.replication_group_primary_endpoint_address}"}
           ]
         }
       }
@@ -244,16 +276,12 @@ module "ecs" {
       subnet_ids = [module.vpc.private_subnets[0]]
       create_security_group = false
       security_group_ids = [module.backend_redis_sg.security_group_id]
-    }
 
-  }
-
-  tags = {
+    tags = {
     Environment = "prod"
     Project     = "project2-1"
-  }
-}
-
+          }
+    }
 
 module "alb" {
   source = "terraform-aws-modules/alb/aws"
@@ -265,7 +293,6 @@ module "alb" {
   vpc_id  = module.vpc.vpc_id
   subnets = module.vpc.public_subnets
 
-  # For example only
   enable_deletion_protection = false
 
   # Security Group

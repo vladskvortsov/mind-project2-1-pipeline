@@ -22,8 +22,6 @@ module "rds_sg" {
   name   = "rds-sg"
   vpc_id = module.vpc.vpc_id
 
-  # ingress_cidr_blocks = ["0.0.0.0/0"]
-
   ingress_with_source_security_group_id = [
     {
       from_port   = 5432
@@ -41,8 +39,6 @@ module "elasticache_sg" {
 
   name   = "elasticache-sg"
   vpc_id = module.vpc.vpc_id
-
-  # ingress_cidr_blocks = ["0.0.0.0/0"]
 
   ingress_with_source_security_group_id = [
     {
@@ -82,8 +78,6 @@ module "backend_rds_sg" {
   name   = "backend-rds-sg"
   vpc_id = module.vpc.vpc_id
 
-  # ingress_cidr_blocks = ["0.0.0.0/0"]
-
   ingress_with_source_security_group_id = [
     {
       from_port   = 8001
@@ -102,8 +96,6 @@ module "backend_redis_sg" {
 
   name   = "backend-redis-sg"
   vpc_id = module.vpc.vpc_id
-
-  # ingress_cidr_blocks = ["0.0.0.0/0"]
 
   ingress_with_source_security_group_id = [
     {
