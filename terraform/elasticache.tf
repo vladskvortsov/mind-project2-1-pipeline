@@ -4,7 +4,7 @@ module "elasticache" {
   cluster_id               = "redis"
   create_cluster           = true
   create_replication_group = true
-  replication_group_id = "redis7"
+  replication_group_id     = "redis7"
 
 
   engine_version = "7.1"
@@ -19,7 +19,7 @@ module "elasticache" {
   vpc_id = module.vpc.vpc_id
 
   create_security_group = false
-  security_group_ids = [module.elasticache_sg.security_group_id]
+  security_group_ids    = [module.elasticache_sg.security_group_id]
 
   # Subnet Group
   subnet_ids = [module.vpc.private_subnets[1], module.vpc.private_subnets[2]]

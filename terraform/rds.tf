@@ -17,7 +17,7 @@ module "rds" {
   password = var.database_vars.DB_PASSWORD
 
   iam_database_authentication_enabled = false
-  manage_master_user_password = false
+  manage_master_user_password         = false
 
   vpc_security_group_ids = [module.rds_sg.security_group_id]
 

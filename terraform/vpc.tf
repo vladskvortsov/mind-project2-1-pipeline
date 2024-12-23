@@ -24,9 +24,9 @@ module "rds_sg" {
 
   ingress_with_source_security_group_id = [
     {
-      from_port   = 5432
-      to_port     = 5432
-      protocol    = "tcp"
+      from_port                = 5432
+      to_port                  = 5432
+      protocol                 = "tcp"
       source_security_group_id = module.backend_rds_sg.security_group_id
     },
   ]
@@ -42,9 +42,9 @@ module "elasticache_sg" {
 
   ingress_with_source_security_group_id = [
     {
-      from_port   = 6379
-      to_port     = 6379
-      protocol    = "tcp"
+      from_port                = 6379
+      to_port                  = 6379
+      protocol                 = "tcp"
       source_security_group_id = module.backend_redis_sg.security_group_id
     },
   ]
@@ -61,9 +61,9 @@ module "frontend_sg" {
   ingress_with_source_security_group_id = [
 
     {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
+      from_port                = 80
+      to_port                  = 80
+      protocol                 = "tcp"
       source_security_group_id = module.alb.security_group_id
     },
   ]
@@ -73,16 +73,16 @@ module "frontend_sg" {
 
 module "backend_rds_sg" {
   depends_on = [module.frontend_sg]
-  source = "terraform-aws-modules/security-group/aws"
+  source     = "terraform-aws-modules/security-group/aws"
 
   name   = "backend-rds-sg"
   vpc_id = module.vpc.vpc_id
 
   ingress_with_source_security_group_id = [
     {
-      from_port   = 8001
-      to_port     = 8001
-      protocol    = "tcp"
+      from_port                = 8001
+      to_port                  = 8001
+      protocol                 = "tcp"
       source_security_group_id = module.frontend_sg.security_group_id
     },
   ]
@@ -92,16 +92,16 @@ module "backend_rds_sg" {
 
 module "backend_redis_sg" {
   depends_on = [module.frontend_sg]
-  source = "terraform-aws-modules/security-group/aws"
+  source     = "terraform-aws-modules/security-group/aws"
 
   name   = "backend-redis-sg"
   vpc_id = module.vpc.vpc_id
 
   ingress_with_source_security_group_id = [
     {
-      from_port   = 8002
-      to_port     = 8002
-      protocol    = "tcp"
+      from_port                = 8002
+      to_port                  = 8002
+      protocol                 = "tcp"
       source_security_group_id = module.frontend_sg.security_group_id
     },
   ]
