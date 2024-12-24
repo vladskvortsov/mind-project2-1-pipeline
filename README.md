@@ -70,7 +70,7 @@ Copy ALB endpoint from your GitHub Action logs and access the frontend page.
 
 ## Removing Resources: 
 
-Use `destroy-recources` workflow to remove recouerces
+Use `destroy-resources` workflow to remove recouerces
 
 ## Key Notes:
 
