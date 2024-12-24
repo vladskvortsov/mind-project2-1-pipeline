@@ -18,9 +18,10 @@ Resource diagram:
 ![alt text](diagram1.png)
 
 ## AWS Infrastructure description
+
 * Amazon Elastic Container Service (ECS):
 
-Runs frontend and backend applications packed in docker containers
+Runs frontend and backend applications packed in docker containers.
 
 * Amazon Relational Database Service (RDS):
 
@@ -58,26 +59,32 @@ Trigger the _deploy-project_ workflow to deploy whole infrastructure.
 
 ### Step 4: Confirm Resources Status
 Validate that the AWS resources are live:
+
 Check ECS Cluster Tasks for running and instpect logs.
 Verify RDS and ElastiCache instances are available using the AWS Management Console or CLI.
 
 ### Step 5: Access the frontend webpage using Load Balancer Endpoint
 Copy ALB endpoint from your GitHub Action logs and access the frontend page. 
+
 > Note: Use `http://` connection for this project.
 
 ## Removing Resources: 
 
-Use `destroy-recources workflow to remove recouerces
+Use `destroy-recources` workflow to remove recouerces
 
 ## Key Notes:
 
-> Resource Costs: Ensure you understand AWS pricing to manage project costs effectively. `ECS configuration for this project isn't free!` 
+> Resource Costs:
+ Ensure you understand AWS pricing to manage project costs effectively. `ECS configuration for this project isn't free!` 
 
-> Security: Use least privilege access for AWS credentials. `Don't paste AWS credentials anywhere excluding GitHub Secrets`
+> Security:
+ Use least privilege access for AWS credentials. `Don't paste AWS credentials anywhere excluding GitHub Secrets`
 
-> Debugging: You can monitor the infrastructure deploying in GitHub Action logs, and findout errors if they present.
+> Debugging:
+ You can monitor the infrastructure deploying in GitHub Action logs, and findout errors if they present.
 
-> Documentation: Don't foget to update the repository’s README.md to reflect current workflows and configurations.
+> Documentation:
+ Don't foget to update the repository’s README.md to reflect current workflows and configurations.
 
 
 
