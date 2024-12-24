@@ -16,6 +16,7 @@ module "vpc" {
   }
 }
 
+# Security Group for RDS instance
 module "rds_sg" {
   source = "terraform-aws-modules/security-group/aws"
 
@@ -34,6 +35,7 @@ module "rds_sg" {
   egress_rules = ["all-all"]
 }
 
+# Security Group for Elasticache
 module "elasticache_sg" {
   source = "terraform-aws-modules/security-group/aws"
 
@@ -52,6 +54,7 @@ module "elasticache_sg" {
   egress_rules = ["all-all"]
 }
 
+# Security Group for ECS frontend service
 module "frontend_sg" {
   source = "terraform-aws-modules/security-group/aws"
 
@@ -71,6 +74,7 @@ module "frontend_sg" {
   egress_rules = ["all-all"]
 }
 
+# Security Group for ECS backend-rds service
 module "backend_rds_sg" {
   depends_on = [module.frontend_sg]
   source     = "terraform-aws-modules/security-group/aws"
@@ -90,6 +94,7 @@ module "backend_rds_sg" {
   egress_rules = ["all-all"]
 }
 
+# Security Group for ECS backend-redis service
 module "backend_redis_sg" {
   depends_on = [module.frontend_sg]
   source     = "terraform-aws-modules/security-group/aws"

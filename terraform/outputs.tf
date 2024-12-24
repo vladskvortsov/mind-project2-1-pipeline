@@ -19,7 +19,7 @@ output "alb_dns_name" {
 }
 
 output "elasticache" {
-  value = module.elasticache.replication_group_primary_endpoint_address
+  value = "${aws_elasticache_cluster.redis.cache_nodes[0].address}:${aws_elasticache_cluster.redis.cache_nodes[0].port}"
 }
 
 output "rds" {
