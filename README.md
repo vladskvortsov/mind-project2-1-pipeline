@@ -1,11 +1,11 @@
 # ECS-Services-RDS-Elasticache-Pipeline
-The pipeline deploys ECS gservices with frontend and backend containers, RDS and Elasticache databases using terraform and GitHub acctions. All services are connected using Security Groups and placed in the custom VPC.
+The pipeline deploys ECS services with frontend and backend containers, RDS and Elasticache databases using terraform and GitHub acctions. All services are connected using Security Groups and placed in the custom VPC.
 
 ## Technologies Used:
 
-#### - _AWS Services_
-#### - _GitHub Actions_
-#### - _Terraform_
+#### -- _AWS Services_
+#### -- _GitHub Actions_
+#### -- _Terraform_
 
 
 ## Prerequisites
@@ -13,25 +13,33 @@ The pipeline deploys ECS gservices with frontend and backend containers, RDS and
 - AWS Account
 - Github Account
 
+Resource diagram:
+
 ![alt text](diagram1.png)
 
 ## AWS Infrastructure description
 * Amazon Elastic Container Service (ECS):
+
 Runs frontend and backend applications packed in docker containers
 
 * Amazon Relational Database Service (RDS):
+
 Provides a managed database for backend operations.
 
 * Amazon ElastiCache:
+
 Caching service (on Redis engine) for performance optimization.
 
 * Amazon Elastic Container Registry (ECR):
+
 Stores Docker images for the deployment.
 
 * Application Load Balancer (ALB):
+
 Balances the traffic for frontend service.
 
 ## Deploying the project
+
 ### Step 1: Fork and Clone
 Fork the repository to your GitHub account. Clone the repository to your local machine for configuration or modifications.
 
@@ -59,7 +67,7 @@ Copy ALB endpoint from your GitHub Action logs and access the frontend page.
 
 ## Removing Resources: 
 
-> Use `destroy-recources workflow to remove recouerces
+Use `destroy-recources workflow to remove recouerces
 
 ## Key Notes:
 
@@ -112,25 +120,3 @@ Variables for backend used by example phyton code, if you wanna use your own con
 
 
 
-
-
-
-
-
-#### * _AWS Services_
-#### * _Docker/Docker-Compose_
-#### * _Terraform_
-#### * _GitHub Actions_
-
-## Requirements to Deploy the Project
-#### -- AWS Account
-#### -- Github Account
-
-## Secrets Configuration
-The project requires these secrets in your GitHub repository:
-
-```sh
-AWS_ACCESS_KEY_ID: IAM access key for AWS API operations.
-AWS_SECRET_ACCESS_KEY: Secret key paired with the access key.
-AWS_REGION: The AWS region where resources will be created (e.g., us-east-1).
-```
