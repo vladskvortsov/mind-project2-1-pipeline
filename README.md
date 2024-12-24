@@ -3,9 +3,9 @@ The pipeline deploys ECS services with frontend and backend containers, RDS and 
 
 ## Technologies Used:
 
-#### -- _AWS Services_
-#### -- _GitHub Actions_
-#### -- _Terraform_
+#### * _AWS Services_
+#### * _GitHub Actions_
+#### * _Terraform_
 
 
 ## Prerequisites
