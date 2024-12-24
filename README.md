@@ -114,9 +114,9 @@ Variables for backend used by example phyton code, if you wanna use your own con
         DB_NAME
         DB_USER
         DB_PASSWORD 
+        DB_PORT 
         
         REDIS_PORT 
-
 
 
 
