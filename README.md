@@ -1,5 +1,5 @@
 # ECS-RDS-Elasticache-Pipeline
-The pipeline deploys ECS services with prepared frontend and backend containers, also RDS and Elasticache databases using Terraform and GitHub acctions. All services are connected using Security Groups and placed in the custom VPC. Docker containers are allready prepared and stored in ECR. The applications code stored in https://github.com/vladskvortsov/mind-project2-1 alltrough as a CI workflow.
+The pipeline deploys ECS services with prepared frontend and backend containers, also RDS and Elasticache databases using Terraform and GitHub acctions. All services are connected using Security Groups and placed in the custom VPC. Docker containers are allready prepared and stored in ECR. The applications code stored in https://github.com/vladskvortsov/mind-project2-1 allthrough as a CI workflow.
 
 
 ## Technologies Used:
@@ -100,4 +100,3 @@ REDIS_PORT
 
 > Documentation:
  Don't foget to update the repository’s README.md to reflect current workflows and configurations.
- 
