@@ -59,7 +59,7 @@ AWS_REGION: The AWS region where resources will be created (e.g., us-east-1).
 Trigger the _deploy-project_ workflow to deploy whole infrastructure.
 
 ### Step 4: Confirm Resources Status
-Validate that the AWS resources are live:
+Validate that the AWS resources are alive:
 
 Check ECS Cluster Tasks for running and instpect logs.
 Verify RDS and ElastiCache instances are available using the AWS Management Console or CLI.
