@@ -64,7 +64,7 @@ Validate that the AWS resources are alive:
 Check ECS Cluster Tasks for running and inspect logs.
 Verify RDS and ElastiCache instances are available using the AWS Management Console or CLI.
 
-> Note: It might take up to `10 minutes` for all the services to start.
+> Note: It might take up to `5 minutes` for all the services to start.
 
 ### Step 5: Access the frontend webpage using the Load Balancer Endpoint
 Copy the ALB endpoint from your GitHub Action logs and access the frontend page. 
@@ -83,7 +83,6 @@ DB_NAME
 DB_USER
 DB_PASSWORD 
 DB_PORT 
-
 REDIS_PORT 
 ```
 
