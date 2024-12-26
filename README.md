@@ -1,5 +1,5 @@
 # ECS-RDS-Elasticache-Pipeline
-The pipeline deploys ECS services with prepared frontend and backend containers, also RDS and Elasticache databases using Terraform and GitHub acctions. All services are connected using Security Groups and placed in the custom VPC. Docker containers are allready prepared and stored in ECR. The applications code stored in https://github.com/vladskvortsov/mind-project2-1 allthrough as a CI workflow.
+The pipeline deploys ECS services with prepared frontend and backend containers, RDS and Elasticache databases using Terraform and GitHub acctions. All services are connected using Security Groups and placed in the custom VPC. Docker containers are already prepared and stored in ECR. The applications code is stored in https://github.com/vladskvortsov/mind-project2-1 although as a CI workflow.
 
 
 ## Technologies Used:
@@ -12,7 +12,7 @@ The pipeline deploys ECS services with prepared frontend and backend containers,
 ## Prerequisites
 
 - AWS Account
-- Github Account
+- GitHub Account
 
 Resources diagram:
 
@@ -56,24 +56,24 @@ AWS_REGION: The AWS region where resources will be created (e.g., us-east-1).
 ```
 
 ### Step 3: Deploy AWS Resources
-Trigger the _deploy-project_ workflow to deploy whole infrastructure.
+Trigger the _deploy-project_ workflow to deploy the whole infrastructure.
 
 ### Step 4: Confirm Resources Status
 Validate that the AWS resources are alive:
 
-Check ECS Cluster Tasks for running and instpect logs.
+Check ECS Cluster Tasks for running and inspect logs.
 Verify RDS and ElastiCache instances are available using the AWS Management Console or CLI.
 
 > Note: It might take up to `10 minutes` for all the services to start.
 
-### Step 5: Access the frontend webpage using Load Balancer Endpoint
-Copy ALB endpoint from your GitHub Action logs and access the frontend page. 
+### Step 5: Access the frontend webpage using the Load Balancer Endpoint
+Copy the ALB endpoint from your GitHub Action logs and access the frontend page. 
 
 > Note: Use `http://` connection for this project.
 
 ## Removing Resources: 
 
-Use `destroy-resources` workflow to remove recouerces.
+Use the `destroy-resources` workflow to remove resources.
 
 ## Database environmental variables:
 Variables for backend used by phyton code, if you wanna use your own containers you should provide yours in the `terraform.tfvars`.
@@ -96,7 +96,7 @@ REDIS_PORT
  Use least privilege access for AWS credentials. `Don't paste AWS credentials anywhere excluding GitHub Secrets`
 
 > Debugging:
- You can monitor the infrastructure deploying in GitHub Action logs, and findout errors if they present.
+ You can monitor the infrastructure deploying in GitHub Action logs, and find out errors if they present.
 
 > Documentation:
- Don't foget to update the repository’s README.md to reflect current workflows and configurations.
+ Don't forget to update the repository’s `README.md` to reflect current workflows and configurations.
