@@ -28,7 +28,7 @@ Runs frontend and backend applications packed in docker containers.
 
 Provides a managed database for backend operations.
 
-* Amazon ElastiCache:
+* Amazon Elasticache:
 
 Caching service (on Redis engine) for performance optimization.
 
